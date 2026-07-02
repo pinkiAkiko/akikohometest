@@ -4,7 +4,7 @@ import CollectionContent from "./CollectionContent";
 // Virtual collections driven by product tags (not Medusa categories)
 const VIRTUAL_COLLECTIONS: Record<string, { tag?: string; title: string; description: string }> = {
   "new-arrivals":  { tag: "new-arrival", title: "New Arrivals",      description: "The latest additions to our collection — fresh styles and seasonal drops." },
-  "best-sellers":  { tag: "bestseller",  title: "Most Loved",        description: "Our customers' all-time favourites, tried and adored across India." },
+  "best-sellers":  {                     title: "Bestsellers",       description: "Our customers' all-time favourites, tried and adored across India." },
   "gift-sets":     { tag: "bundle",      title: "Curated Gift Sets", description: "Thoughtfully bundled for gifting or treating yourself — save more together." },
   "all":           {                     title: "All Products",       description: "Explore our complete range of premium home textiles." },
 };

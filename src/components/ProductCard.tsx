@@ -38,11 +38,18 @@ const ProductCard = ({ image, name, material, price, originalPrice, discountPct,
           sizes="(max-width: 768px) 50vw, 25vw"
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
         />
-        {badge && (
-          <span className="absolute top-3 left-3 bg-accent text-accent-foreground text-[10px] font-sans tracking-luxury uppercase px-2.5 py-1">
-            {badge}
-          </span>
-        )}
+        <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5">
+          {badge && (
+            <span className="bg-accent text-accent-foreground text-[10px] font-sans tracking-luxury uppercase px-2.5 py-1">
+              {badge}
+            </span>
+          )}
+          {material && (
+            <span className="bg-secondary text-secondary-foreground text-[10px] font-sans tracking-luxury uppercase px-2.5 py-1 shadow-sm">
+              {material}
+            </span>
+          )}
+        </div>
         <button
           className={`absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-full transition-all duration-300 hover:bg-background ${wishlisted ? "opacity-100" : "opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100"}`}
           aria-label={wishlisted ? `Remove ${name} from wishlist` : `Add ${name} to wishlist`}

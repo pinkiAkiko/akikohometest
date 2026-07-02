@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, ShoppingBag, Menu, X, ChevronDown, User, Heart } from "lucide-react";
 import Image from "next/image";
@@ -11,10 +11,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { getCategories, StoreCategory } from "@/lib/medusa-api";
 
-const staticNavLinks = [
-  { label: "Bestseller", href: "/collections/best-sellers" },
-  { label: "About", href: "/about" },
-];
+const leadingNavLinks = [{ label: "Bestseller", href: "/collections/best-sellers" }];
+
+const trailingNavLinks = [{ label: "About", href: "/about" }];
 
 type NavLink = { label: string; href: string; children?: NavLink[] };
 
@@ -209,7 +208,11 @@ const Header = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [navGroups, setNavGroups] = useState(fallbackNavGroups);
+  const [dropdownLeft, setDropdownLeft] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const navRowRef = useRef<HTMLDivElement>(null);
+  const triggerRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const dropdownPanelRef = useRef<HTMLDivElement>(null);
   const { cartCount, setDrawerOpen } = useCart();
   const { isAuthenticated } = useAuth();
   const { count: wishlistCount } = useWishlist();
@@ -228,6 +231,25 @@ const Header = () => {
       })
       .catch(() => {/* keep fallback */ });
   }, []);
+
+  const activeNavGroup = navGroups.find((g) => g.title === activeGroup) ?? null;
+
+  // Align the shared dropdown under its trigger, clamped so it never runs
+  // past the edges of the nav row (and therefore never past the viewport).
+  useLayoutEffect(() => {
+    const container = navRowRef.current;
+    const trigger = activeGroup ? triggerRefs.current[activeGroup] : null;
+    const panel = dropdownPanelRef.current;
+    if (!container || !trigger || !panel) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const triggerRect = trigger.getBoundingClientRect();
+    const panelWidth = panel.offsetWidth;
+
+    const centered = triggerRect.left - containerRect.left + triggerRect.width / 2 - panelWidth / 2;
+    const clamped = Math.max(0, Math.min(centered, containerRect.width - panelWidth));
+    setDropdownLeft(clamped);
+  }, [activeGroup, navGroups]);
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md">
@@ -336,14 +358,28 @@ const Header = () => {
 
       {/* ── Row 2: Nav bar (desktop only) ───────────────────────────────── */}
       <div className="hidden lg:block border-b border-border">
-        <div className="max-w-7xl mx-auto px-8 lg:px-16">
+        <div
+          ref={navRowRef}
+          className="relative max-w-7xl mx-auto px-8 lg:px-16"
+          onMouseLeave={() => setActiveGroup(null)}
+        >
           <nav className="flex items-center justify-between h-12">
+            {leadingNavLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="text-xs font-sans font-semibold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 h-full flex items-center"
+              >
+                {link.label}
+              </Link>
+            ))}
+
             {navGroups.map((group) => (
               <div
                 key={group.title}
+                ref={(el) => { triggerRefs.current[group.title] = el; }}
                 className="relative h-full flex items-center"
                 onMouseEnter={() => setActiveGroup(group.title)}
-                onMouseLeave={() => setActiveGroup(null)}
               >
                 <button className="text-xs font-sans font-semibold tracking-widest uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 flex items-center gap-1 h-full">
                   {group.title}
@@ -352,20 +388,10 @@ const Header = () => {
                     className={`transition-transform duration-200 ${activeGroup === group.title ? "rotate-180" : ""}`}
                   />
                 </button>
-
-                {/* Per-group dropdown */}
-                <div
-                  className={`absolute top-full left-1/2 -translate-x-1/2 pt-0 transition-all duration-200 ${activeGroup === group.title ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-                    }`}
-                >
-                  <div className="bg-secondary border border-border shadow-lg min-w-44">
-                    <DesktopDropdownPanel links={group.links} />
-                  </div>
-                </div>
               </div>
             ))}
 
-            {staticNavLinks.map((link) => (
+            {trailingNavLinks.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
@@ -375,6 +401,23 @@ const Header = () => {
               </Link>
             ))}
           </nav>
+
+          {/* Shared dropdown — measured against its trigger, then clamped to the
+              nav row's own bounds so it's centered under the active item without
+              ever overflowing past the page edge. */}
+          {activeNavGroup && (
+            <div
+              className="absolute top-full z-20 pointer-events-auto"
+              style={{ left: dropdownLeft }}
+            >
+              <div
+                ref={dropdownPanelRef}
+                className="bg-secondary border border-border shadow-lg min-w-44 max-w-[calc(100vw-4rem)] overflow-x-auto"
+              >
+                <DesktopDropdownPanel links={activeNavGroup.links} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -414,6 +457,17 @@ const Header = () => {
       {mobileOpen && (
         <div className="lg:hidden bg-background border-t border-border">
           <nav className="px-6 py-6 space-y-4">
+            {leadingNavLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="block text-base font-sans text-foreground hover:text-muted-foreground transition-colors"
+                onClick={() => setMobileOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+
             {navGroups.map((group) => (
               <details key={group.title} className="group/root">
                 <summary className="flex items-center justify-between w-full cursor-pointer list-none text-base font-sans text-foreground hover:text-muted-foreground transition-colors">
@@ -428,7 +482,7 @@ const Header = () => {
               </details>
             ))}
 
-            {staticNavLinks.map((link) => (
+            {trailingNavLinks.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}

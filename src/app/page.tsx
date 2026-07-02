@@ -57,12 +57,14 @@ export default async function Home() {
       ? testimonialData.map((t) => ({ quote: t.quote, author: t.author_name, product: t.product_handle ?? "" }))
       : fallbackTestimonials;
 
-  // Build category tiles from Medusa data
-  const categoryTiles = categories.map((cat) => ({
-    name: cat.name,
-    image: (cat.metadata?.image as string | undefined) ?? null,
-    href: `/collections/${cat.handle}`,
-  }));
+  // Build category tiles from Medusa data — only show categories that have an image set
+  const categoryTiles = categories
+    .filter((cat) => !!cat.metadata?.image)
+    .map((cat) => ({
+      name: cat.name,
+      image: cat.metadata!.image as string,
+      href: `/collections/${cat.handle}`,
+    }));
 
   return (
     <div className="min-h-screen bg-background">
@@ -73,7 +75,7 @@ export default async function Home() {
       <HeroBanner banners={banners} />
 
       {/* Shop by Category */}
-      <section className="py-20 lg:py-28">
+      <section className="pt-20 lg:pt-28 pb-8 lg:pb-12">
         <div className="px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto mb-8">
           <ScrollReveal variant="soft">
             <SectionHeading title="Shop by Category" subtitle="Explore our curated range of premium home textiles" />
@@ -91,24 +93,6 @@ export default async function Home() {
           </a>
         </div>
       </section>
-
-      {/* Editorial carousel — managed from Admin → Banners (type: editorial) */}
-      <ScrollReveal variant="fade">
-        <EditorialCarousel
-          banners={editorialBanners}
-          fallback={
-            <EditorialSplit
-              image={bambooImg}
-              imageAlt="Bamboo towels in sage and cream on marble countertop"
-              eyebrow="Featured Collection"
-              title="India's First HeiQ Pure™ Cotton Towels"
-              description="Elevate your daily routine with ultra-soft combed cotton towels enhanced with HeiQ Pure Silver Ion Technology. Designed to help keep towels fresh, hygienic, and odor-resistant between washes, they bring Swiss textile innovation to Indian homes for the very first time. Crafted for superior softness, absorbency, and long-lasting performance, this collection redefines everyday comfort."
-              ctaText="EXPLORE NOW"
-              ctaHref="/collections/bamboo"
-            />
-          }
-        />
-      </ScrollReveal>
 
       {/* New Arrivals */}
       <section className="py-20 lg:py-28 px-6 sm:px-8 lg:px-12 max-w-7xl mx-auto">
@@ -139,6 +123,24 @@ export default async function Home() {
           </a>
         </div>
       </section>
+
+      {/* Editorial carousel — managed from Admin → Banners (type: editorial) */}
+      <ScrollReveal variant="fade">
+        <EditorialCarousel
+          banners={editorialBanners}
+          fallback={
+            <EditorialSplit
+              image={bambooImg}
+              imageAlt="Bamboo towels in sage and cream on marble countertop"
+              eyebrow="Featured Collection"
+              title="India's First HeiQ Pure™ Cotton Towels"
+              description="Elevate your daily routine with ultra-soft combed cotton towels enhanced with HeiQ Pure Silver Ion Technology. Designed to help keep towels fresh, hygienic, and odor-resistant between washes, they bring Swiss textile innovation to Indian homes for the very first time. Crafted for superior softness, absorbency, and long-lasting performance, this collection redefines everyday comfort."
+              ctaText="EXPLORE NOW"
+              ctaHref="/collections/bamboo"
+            />
+          }
+        />
+      </ScrollReveal>
 
       {/* Crafted with Care + Why Akiko Home — unified */}
       <section className="py-20 lg:py-28 px-6 sm:px-8 lg:px-12 bg-secondary">
