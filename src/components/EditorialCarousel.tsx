@@ -57,7 +57,7 @@ const EditorialCarousel = ({ banners, fallback }: Props) => {
               </div>
 
               {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-foreground/10 to-transparent" />
+              <div className="absolute inset-0 to-transparent" />
 
               {/* Text — bottom right */}
               <div className="absolute bottom-0 right-0 z-10 px-8 sm:px-12 lg:px-20 pb-14 lg:pb-16 max-w-3xl text-right">
@@ -115,9 +115,8 @@ const EditorialCarousel = ({ banners, fallback }: Props) => {
             <button
               key={i}
               onClick={() => emblaApi?.scrollTo(i)}
-              className={`h-0.5 transition-all duration-300 bg-primary-foreground/70 hover:bg-primary-foreground ${
-                i === activeIndex ? "w-8 bg-primary-foreground" : "w-4"
-              }`}
+              className={`h-0.5 transition-all duration-300 bg-primary-foreground/70 hover:bg-primary-foreground ${i === activeIndex ? "w-8 bg-primary-foreground" : "w-4"
+                }`}
               aria-label={`Go to slide ${i + 1}`}
             />
           ))}

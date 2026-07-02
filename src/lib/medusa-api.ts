@@ -354,18 +354,64 @@ export interface StoreCategory {
   description: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any> | null;
+  parent_category_id: string | null;
+  category_children?: StoreCategory[];
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapCategory(c: any): StoreCategory {
+  return {
+    id: c.id,
+    handle: c.handle,
+    name: c.name,
+    description: c.description ?? null,
+    metadata: c.metadata ?? null,
+    parent_category_id: c.parent_category_id ?? null,
+    category_children: (c.category_children || []).map(mapCategory),
+  };
 }
 
 // ─── Product API ──────────────────────────────────────────────────────────────
 
+/** Collect a category's id plus every descendant reachable via real parent/child
+ *  or metadata.nav_parent links (mirrors the nav-tree walk in Header.tsx's buildNavGroups),
+ *  so a parent category's page shows its own products plus all its nav children's. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function collectCategoryIdsWithNavDescendants(root: any, categories: any[]): string[] {
+  const childrenByParentHandle: Record<string, typeof categories> = {};
+  const childrenByParentId: Record<string, typeof categories> = {};
+  for (const c of categories) {
+    const navParentHandle = c.metadata?.nav_parent as string | undefined;
+    if (navParentHandle) (childrenByParentHandle[navParentHandle] ??= []).push(c);
+    if (c.parent_category_id) (childrenByParentId[c.parent_category_id] ??= []).push(c);
+  }
+
+  const visited = new Set<string>();
+  const ids: string[] = [];
+  const stack = [root];
+  while (stack.length) {
+    const c = stack.pop();
+    if (!c || visited.has(c.id)) continue;
+    visited.add(c.id);
+    ids.push(c.id);
+    stack.push(...(childrenByParentHandle[c.handle] || []));
+    stack.push(...(childrenByParentId[c.id] || []));
+  }
+  return ids;
+}
+
 export async function getProductsByCategory(categoryHandle: string): Promise<StoreProduct[]> {
-  const catData = await medusaFetch("/store/product-categories?limit=50");
+  const catData = await medusaFetch("/store/product-categories?limit=50&fields=id,handle,parent_category_id,metadata");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cat = catData.product_categories?.find((c: any) => c.handle === categoryHandle);
+  const categories = (catData.product_categories || []) as any[];
+  const cat = categories.find((c) => c.handle === categoryHandle);
   if (!cat) return [];
 
+  const categoryIds = collectCategoryIdsWithNavDescendants(cat, categories);
+  const categoryIdQuery = categoryIds.map((id) => `category_id[]=${id}`).join("&");
+
   const [data, promoMap] = await Promise.all([
-    medusaFetch(`/store/products?limit=50&fields=+metadata,+options.values.metadata&category_id[]=${cat.id}`, true),
+    medusaFetch(`/store/products?limit=50&fields=+metadata,+options.values.metadata&${categoryIdQuery}`, true),
     fetchAutoPromotionMap(),
   ]);
   return ((data.products || []) as Record<string, unknown>[]).map((p) => mapProduct(p, promoMap));
@@ -394,18 +440,21 @@ export async function getProductsByTag(tag: string, limit = 4): Promise<StorePro
   return filtered.slice(0, limit).map((p) => mapProduct(p, promoMap));
 }
 
-/** Fetch all active product categories. */
+/** Fetch all active product categories (flat), with any real Medusa parent/child
+ *  relationships nested under `category_children` (`include_descendants_tree`).
+ *  Nav nesting is mostly driven by metadata (see buildNavGroups in Header.tsx),
+ *  since the Admin category edit form here has no Parent category field —
+ *  so this intentionally returns every category, not just top-level ones. */
 export async function getCategories(): Promise<StoreCategory[]> {
   try {
-    const data = await medusaFetch("/store/product-categories?limit=50");
+    const data = await medusaFetch(
+      "/store/product-categories?limit=50&include_descendants_tree=true&fields=id,handle,name,description,metadata,parent_category_id,is_active,*category_children"
+    );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data.product_categories || []).filter((c: any) => c.is_active !== false).map((c: any) => ({
-      id: c.id,
-      handle: c.handle,
-      name: c.name,
-      description: c.description ?? null,
-      metadata: c.metadata ?? null,
-    }));
+    return (data.product_categories || [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((c: any) => c.is_active !== false)
+      .map(mapCategory);
   } catch {
     return [];
   }
@@ -486,7 +535,7 @@ export async function getCategoryByHandle(handle: string): Promise<StoreCategory
     const data = await medusaFetch(`/store/product-categories?handle=${handle}`);
     const cat = data.product_categories?.[0];
     if (!cat) return null;
-    return { id: cat.id, handle: cat.handle, name: cat.name, description: cat.description ?? null, metadata: cat.metadata ?? null };
+    return mapCategory(cat);
   } catch {
     return null;
   }
