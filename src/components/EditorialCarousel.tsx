@@ -47,7 +47,7 @@ const EditorialCarousel = ({ banners, fallback }: Props) => {
                 {banner.image_url && (
                   <Image
                     src={banner.image_url}
-                    alt={banner.title}
+                    alt={banner.title ?? ""}
                     fill
                     priority={i === 0}
                     sizes="100vw"

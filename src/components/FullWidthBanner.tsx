@@ -15,7 +15,7 @@ const FullWidthBanner = ({ banner, fallbackImage }: FullWidthBannerProps) => {
       {imageSrc && (
         <Image
           src={imageSrc}
-          alt={banner.title}
+          alt={banner.title ?? ""}
           fill
           sizes="100vw"
           className="absolute inset-0 w-full h-full object-cover"
