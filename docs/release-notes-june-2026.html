@@ -1,0 +1,164 @@
+<title>Akiko Home — Release Notes · June 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #F8F8F6;
+    color: #141412;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 52px 28px 72px;
+  }
+
+  .doc-header {
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #141412;
+  }
+
+  .brand {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #2B5C3F;
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-family: Georgia, serif;
+    font-size: 26px;
+    font-weight: normal;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .date {
+    font-size: 12px;
+    color: #787874;
+    margin-top: 6px;
+  }
+
+  .section { margin-bottom: 32px; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-bottom: 14px;
+    display: inline-block;
+  }
+  .fe { background: #EEF3FF; color: #1D40B0; }
+  .be { background: #F4F0FD; color: #6827C2; }
+  .deploy { background: #FEF2F2; color: #991B1B; }
+
+  ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  li {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    font-size: 13px;
+    color: #141412;
+  }
+
+  li::before {
+    content: '—';
+    color: #B0AEA8;
+    flex-shrink: 0;
+    font-size: 11px;
+  }
+
+  .note {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #787874;
+    padding-left: 20px;
+    border-left: 2px solid #E6E6E3;
+  }
+
+  .doc-footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid #E6E6E3;
+    font-size: 11px;
+    color: #B0AEA8;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    background: #EDEDEA;
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+</style>
+
+<div class="page">
+
+  <header class="doc-header">
+    <p class="brand">Akiko Home</p>
+    <h1>Release Notes</h1>
+    <p class="date">29 June 2026</p>
+  </header>
+
+  <div class="section">
+    <div class="section-label fe">Frontend</div>
+    <ul>
+      <li>Header split into two rows — logo bar + dynamic nav bar (categories from backend)</li>
+      <li>Category section converted to auto-sliding carousel with arrows</li>
+      <li>New <code>/collections</code> index page (was 404)</li>
+      <li>Editorial section replaced with backend-managed full-width carousel</li>
+      <li>Testimonials redesigned — sliding cards, green stars, auto-scroll</li>
+      <li>Custom brand icons in Crafted with Purpose section</li>
+      <li>Instagram feed wired to Graph API with static fallback</li>
+      <li>Hero banner prev/next arrows added</li>
+      <li>Duplicate sections merged; unused sections commented out</li>
+      <li>Footer social icons updated; border softened; <code>.env</code> gitignored</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="section-label be">Backend</div>
+    <ul>
+      <li>Banner module: new <code>type</code> field — <code>hero</code> or <code>editorial</code></li>
+      <li>Two DB migrations prepared (type column + nullable title)</li>
+      <li>Store API: <code>GET /store/banners?type=</code> filter added</li>
+      <li>Admin UI: type selector dropdown and badge per banner</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <div class="section-label deploy">Deploy</div>
+    <ul>
+      <li>Run <code>npx medusa db:migrate</code> on production before deploying</li>
+      <li>PRs raised — <code>frontend-fixes</code> and <code>feat/banner-type-editorial</code></li>
+    </ul>
+    <p class="note">Instagram live feed requires an access token — static fallback active until configured.</p>
+  </div>
+
+  <footer class="doc-footer">
+    <span>Akiko Home · June 2026</span>
+    <span>frontend-fixes · feat/banner-type-editorial</span>
+  </footer>
+
+</div>
